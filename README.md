@@ -25,3 +25,15 @@ reasymotion-on-letter-to-word: the same thing as reasymotion-on-letter-to-letter
 reasymotion-select-screen <keystrokes>: select the whole screen then runs keystrokes and then runs reasymotion-selection (this is used to implement most of higher level functions)
 
 reasymotion-word: use reasymotion to jump to a word on the screen
+
+# Configuration
+
+reasymotion_keys keys to use when jumping to a selection.
+
+default value: "abcdefghijklmnopqrstuvwxyz"
+
+
+REasymotionBackground - the face that is used on the entire screen running reasymotion (currently not entirely working maybe?)
+
+
+REasymotionForeground - the face that is used to display the "jump prompts"
