@@ -118,6 +118,10 @@ fn main() {
             // let cancel_location =
         }
 
+        "load" => {
+            println!("{}",include_str!("../rc/reasymotion.kak"));
+        }
+
         _ => {
             fail_with("that command is currently unsupported");
         }
@@ -168,7 +172,6 @@ fn format_highlight(selection: &Selection, label: &String) -> String {
 }
 
 fn min_selection_length(selection: &Selection) -> usize {
-    eprintln!("selection that getting length: {:?}",selection);
     if selection.0.0 != selection.1.0 {
         0
     } else {
