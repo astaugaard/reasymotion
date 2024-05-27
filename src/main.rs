@@ -54,6 +54,15 @@ fn main() {
                 None => fail_with("failed to parse selection_locations"),
             };
 
+            if selection_locations.len() == 1 {
+                remove_highlighting();
+
+                set_selection(selection_locations[0]);
+
+
+                exit(0);
+            }
+
             // todo get option for what keys to use
             let keystrokemap: Vec<(Selection, String)> =
                 generate_keysequences(selection_locations, &easymotion_keys).collect();
