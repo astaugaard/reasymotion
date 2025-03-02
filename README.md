@@ -19,6 +19,7 @@ evaluate-commands $sh {
 
 ## Underlying Commands
 **reasymotion-selection**: runs reasymotion to keep one of your current selections
+
 **reasymotion-selection-expand**: runs reasymotion to expand the selection described in it's first argument using one of your current selections
 
 ## Basic Movement Commands
