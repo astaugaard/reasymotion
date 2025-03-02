@@ -16,8 +16,12 @@ evaluate-commands $sh {
 ```
 
 # Commands
-**reasymotion-selection**: runs reasymotion to keep one of your current selections 
 
+## Underlying Commands
+**reasymotion-selection**: runs reasymotion to keep one of your current selections
+**reasymotion-selection-expand**: runs reasymotion to expand the selection described in it's first argument using one of your current selections
+
+## Basic Movement Commands
 **reasymotion-on-letter-to-letter**: allows you to input a letter then it will start reasymotion to try to jump to an instance of that letter
 
 **reasymotion-on-letter-to-word**: the same thing as reasymotion-on-letter-to-letter, but instead only selects letters at the start of a word
@@ -25,6 +29,11 @@ evaluate-commands $sh {
 **reasymotion-select-screen** \<keystrokes\>: select the whole screen then runs keystrokes and then runs reasymotion-selection (this is used to implement most of higher level functions)
 
 **reasymotion-word**: use reasymotion to jump to a word on the screen
+
+## Selection Expanding  Commands
+(I'm willing to take suggestions for the name of this section)
+
+Each of the above "basic movement commands" has a {name}-expand variant that expands the current selection.
 
 # Configuration
 

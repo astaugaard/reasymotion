@@ -31,6 +31,15 @@ fn main() {
         fail_with("not enough arguments passed to reasymotion")
     }
 
+    let extend_selection = match env::var("EXTEND_SELECTION") {
+                Ok(a) => {
+                    match parse_selection(&a) {
+                        Some(b) => { kak_debug("got selection"); Some((a,b)) },
+                        None => fail_with(&format!("failed to parse selection {a}, this could be because it represents more than one selection (this plugin only currently supports having one)")),
+                    }
+                }
+                Err(_) => None,
+            };
 
     match args[1].as_str() {
         "start" => {
@@ -42,7 +51,6 @@ fn main() {
             let easymotion_keys = match env::var("kak_opt_reasymotion_keys") {
                 Ok(a) => a,
                 Err(err) => fail_with(&format!("failed to get option reasymotion-keys: {}", err)),
-
             };
 
             let selection_locations = match selection_locations
@@ -57,8 +65,9 @@ fn main() {
             if selection_locations.len() == 1 {
                 remove_highlighting();
 
-                set_selection(selection_locations[0]);
+                set_or_extend_selection(selection_locations[0], extend_selection.map(|a| a.1));
 
+                set_selection(selection_locations[0]);
 
                 exit(0);
             }
@@ -69,11 +78,11 @@ fn main() {
 
             generate_highlighting(&keystrokemap);
 
-            generate_on_key_func(&keystrokemap)
+            generate_on_key_func(&keystrokemap, extend_selection.map(|a| a.0))
         }
         "keypress" => {
             if args.len() <= 3 {
-                fail_with("not enough arugments to reasymotion keypress command");
+                fail_with("not enough arguments to reasymotion keypress command");
             }
             let args = &args[2..];
 
@@ -100,35 +109,35 @@ fn main() {
 
             let cancel_selection = selections[0].clone();
 
-            let remaining:Vec<(Selection,String)> = selections.into_iter().filter_map(
-                |(selection,label)|
-                {
+            let remaining: Vec<(Selection, String)> = selections
+                .into_iter()
+                .filter_map(|(selection, label)| {
                     let new_label = label.strip_prefix(&keypressed)?;
-                    Some((selection,new_label.to_string()))
-
-                }).collect();
+                    Some((selection, new_label.to_string()))
+                })
+                .collect();
 
             match remaining.len() {
                 0 => {
                     set_selection(cancel_selection.0);
                     remove_highlighting();
-                },
+                }
                 1 => {
                     let selection = &remaining[0];
-                    set_selection(selection.0);
+                    set_or_extend_selection(selection.0, extend_selection.map(|a| a.1));
                     remove_highlighting();
-                },
+                }
                 _ => {
                     generate_highlighting(&remaining);
-                    generate_on_key_func(&remaining);
-                },
+                    generate_on_key_func(&remaining, extend_selection.map(|a| a.0));
+                }
             }
 
             // let cancel_location =
         }
 
         "load" => {
-            println!("{}",include_str!("../rc/reasymotion.kak"));
+            println!("{}", include_str!("../rc/reasymotion.kak"));
         }
 
         _ => {
@@ -143,8 +152,28 @@ fn main() {
     // the key is fed back in as an the env variable
 }
 
+fn set_or_extend_selection(
+    selection_location: ((usize, usize), (usize, usize)),
+    a: Option<((usize, usize), (usize, usize))>,
+) {
+    if let Some((start, end)) = a {
+        let locs = [start,end,selection_location.0,selection_location.1];
+
+        set_selection((
+            *locs.iter().min().unwrap(),
+            // selection_location.0.min(start),
+            *locs.iter().max().unwrap(),
+        ));
+    } else {
+        set_selection(selection_location);
+    }
+}
+
 fn set_selection(selection: ((usize, usize), (usize, usize))) {
-    println!("select {}.{},{}.{}", selection.0.0,selection.0.1,selection.1.0,selection.1.1);
+    println!(
+        "select {}.{},{}.{}",
+        selection.0 .0, selection.0 .1, selection.1 .0, selection.1 .1
+    );
 }
 
 fn remove_highlighting() {
@@ -152,7 +181,7 @@ fn remove_highlighting() {
     println!("remove-highlighter buffer/reasymotionbackground");
 }
 
-fn generate_on_key_func(keystrokemap: &[(Selection, String)]) {
+fn generate_on_key_func(keystrokemap: &[(Selection, String)], old_selection: Option<String>) {
     let arguments = keystrokemap
         .iter()
         .map(|(selection, label)| {
@@ -166,7 +195,25 @@ fn generate_on_key_func(keystrokemap: &[(Selection, String)]) {
 
     // commend with env var name provided to make sure
     // that it is passed into the env of the command
-    println!("on-key {}",quote_kakoune(&format!("evaluate-commands %sh{{ # $kak_key \n rkak_easymotion keypress {arguments} }}")));
+
+    match old_selection {
+        Some(selection) => {
+            println!(
+                "on-key {}",
+                quote_kakoune(&format!(
+                    "evaluate-commands %sh{{ export EXTEND_SELECTION={selection} \n # $kak_key \n $kak_opt_reasymotion_command keypress {arguments} }}"
+                ))
+            );
+        }
+        None => {
+            println!(
+                "on-key {}",
+                quote_kakoune(&format!(
+                    "evaluate-commands %sh{{ # $kak_key \n $kak_opt_reasymotion_command keypress {arguments} }}"
+                ))
+            );
+        }
+    }
 }
 
 fn format_highlight(selection: &Selection, label: &String) -> String {
@@ -176,15 +223,17 @@ fn format_highlight(selection: &Selection, label: &String) -> String {
 
     quote_kakoune(&format!(
         "{}.{}+{length}|{{REasymotionForeground}}{}",
-        start.0, start.1,&label[0..length.max(1)]
+        start.0,
+        start.1,
+        &label[0..length.max(1)]
     ))
 }
 
 fn min_selection_length(selection: &Selection) -> usize {
-    if selection.0.0 != selection.1.0 {
+    if selection.0 .0 != selection.1 .0 {
         0
     } else {
-        selection.1.1 - selection.0.1
+        selection.1 .1 - selection.0 .1
     }
 }
 
