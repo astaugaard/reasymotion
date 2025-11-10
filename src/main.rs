@@ -72,7 +72,9 @@ fn main() {
                 exit(0);
             }
 
-            set_selection(selection_locations[0]);
+            let escape_selection = (selection_locations[0].0,selection_locations[0].0);
+
+            set_selection(escape_selection);
 
             // todo get option for what keys to use
             let keystrokemap: Vec<(Selection, String)> =
