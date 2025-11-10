@@ -72,7 +72,7 @@ fn main() {
                 exit(0);
             }
 
-            let escape_selection = (selection_locations[0].0,selection_locations[0].0);
+            let escape_selection = (selection_locations[0].0, selection_locations[0].0);
 
             set_selection(escape_selection);
 
@@ -132,6 +132,10 @@ fn main() {
                     remove_highlighting();
                 }
                 _ => {
+                    let escape_selection = (remaining[0].0 .0, remaining[0].0 .0);
+
+                    set_selection(escape_selection);
+
                     generate_highlighting(&remaining);
                     generate_on_key_func(&remaining, extend_selection.map(|a| a.0));
                 }
