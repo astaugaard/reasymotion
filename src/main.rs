@@ -72,6 +72,8 @@ fn main() {
                 exit(0);
             }
 
+            set_selection(selection_locations[0]);
+
             // todo get option for what keys to use
             let keystrokemap: Vec<(Selection, String)> =
                 generate_keysequences(selection_locations, &easymotion_keys).collect();
@@ -157,7 +159,7 @@ fn set_or_extend_selection(
     a: Option<((usize, usize), (usize, usize))>,
 ) {
     if let Some((start, end)) = a {
-        let locs = [start,end,selection_location.0,selection_location.1];
+        let locs = [start, end, selection_location.0, selection_location.1];
 
         set_selection((
             *locs.iter().min().unwrap(),
